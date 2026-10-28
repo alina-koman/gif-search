@@ -9,6 +9,7 @@ import { GifGrid } from './components/gif-grid/gif-grid';
 import { SearchBar } from './components/search-bar/search-bar';
 
 type SearchStatus = 'idle' | 'loading' | 'success' | 'error';
+type GifRequest = { query: string; offset: number; append: boolean };
 
 @Component({
   imports: [GifDetailModal, GifGrid, SearchBar],
@@ -19,43 +20,72 @@ type SearchStatus = 'idle' | 'loading' | 'success' | 'error';
 export class App implements OnInit {
   private readonly gifService = inject(GifService);
   private readonly destroyRef = inject(DestroyRef);
-  private readonly searchTerms = new Subject<string>();
+  private readonly requests = new Subject<GifRequest>();
 
   protected readonly gifs = signal<Gif[]>([]);
   protected readonly query = signal('');
   protected readonly status = signal<SearchStatus>('idle');
   protected readonly selectedGif = signal<Gif | null>(null);
   protected readonly errorMessage = signal('');
+  protected readonly loadMoreError = signal('');
+  protected readonly isLoadingMore = signal(false);
+  protected readonly hasMore = signal(false);
   protected readonly loadingPlaceholders = [1, 2, 3, 4, 5, 6, 7, 8];
   protected readonly currentYear = new Date().getFullYear();
   private lastDetailTrigger: HTMLButtonElement | null = null;
+  private nextOffset = 0;
 
   ngOnInit(): void {
-    this.searchTerms
+    this.requests
       .pipe(
-        switchMap((query) => {
-          this.query.set(query);
-          this.errorMessage.set('');
+        switchMap(({ query, offset, append }) => {
+          if (!append) {
+            this.query.set(query);
+            this.gifs.set([]);
+            this.hasMore.set(false);
+            this.isLoadingMore.set(false);
+          }
 
           if (!query) {
-            this.gifs.set([]);
             this.status.set('idle');
+            this.loadMoreError.set('');
             return EMPTY;
           }
 
-          this.status.set('loading');
+          if (!append) {
+            this.status.set('loading');
+          } else {
+            this.isLoadingMore.set(true);
+          }
 
-          return this.gifService.searchGifs(query).pipe(
+          this.errorMessage.set('');
+          this.loadMoreError.set('');
+
+          return this.gifService.searchGifs(query, 20, offset).pipe(
             tap((response) => {
-              this.gifs.set(response.data);
+              this.gifs.update((current) =>
+                append ? [...current, ...response.data] : response.data,
+              );
+              this.nextOffset = response.pagination.offset + response.pagination.count;
+              this.hasMore.set(
+                response.pagination.count > 0 &&
+                  this.nextOffset <= 4999 &&
+                  this.nextOffset < response.pagination.total_count,
+              );
               this.status.set('success');
+              this.isLoadingMore.set(false);
             }),
             catchError(() => {
-              this.gifs.set([]);
-              this.status.set('error');
-              this.errorMessage.set(
-                'Не вдалося завантажити GIF. Перевірте з’єднання та спробуйте ще раз.',
-              );
+              if (append) {
+                this.isLoadingMore.set(false);
+                this.loadMoreError.set('Не вдалося завантажити наступні GIF. Спробуйте ще раз.');
+              } else {
+                this.gifs.set([]);
+                this.status.set('error');
+                this.errorMessage.set(
+                  'Не вдалося завантажити GIF. Перевірте з’єднання та спробуйте ще раз.',
+                );
+              }
               return EMPTY;
             }),
           );
@@ -66,7 +96,29 @@ export class App implements OnInit {
   }
 
   protected search(query: string): void {
-    this.searchTerms.next(query.trim());
+    const normalizedQuery = query.trim();
+    if (!normalizedQuery) {
+      this.gifs.set([]);
+      this.query.set('');
+      this.status.set('idle');
+      this.hasMore.set(false);
+      this.isLoadingMore.set(false);
+      this.loadMoreError.set('');
+      this.requests.next({ query: '', offset: 0, append: false });
+      return;
+    }
+
+    this.nextOffset = 0;
+    this.loadMoreError.set('');
+    this.requests.next({ query: normalizedQuery, offset: 0, append: false });
+  }
+
+  protected loadMore(): void {
+    if (!this.hasMore() || this.isLoadingMore() || this.status() !== 'success') {
+      return;
+    }
+
+    this.requests.next({ query: this.query(), offset: this.nextOffset, append: true });
   }
 
   protected selectGif(selection: { gif: Gif; trigger: HTMLButtonElement }): void {

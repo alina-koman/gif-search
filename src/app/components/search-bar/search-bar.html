@@ -7,7 +7,9 @@
   <input
     id="gif-search"
     class="min-w-0 flex-1 bg-transparent py-2 text-sm text-white outline-none placeholder:text-zinc-500 sm:text-base"
-    type="search"
+    type="text"
+    role="searchbox"
+    inputmode="search"
     autocomplete="off"
     placeholder="Шукати GIF..."
     [value]="query()"

@@ -62,13 +62,30 @@
           <span class="text-sm text-zinc-500">{{ gifs().length }} GIF</span>
         </div>
         <app-gif-grid [gifs]="gifs()" (gifSelected)="selectGif($event)" />
+        @if (loadMoreError()) {
+          <p class="mt-5 text-center text-sm text-rose-300" role="alert">{{ loadMoreError() }}</p>
+        }
+        @if (hasMore()) {
+          <div class="mt-8 flex justify-center">
+            <button
+              class="button-secondary min-w-48"
+              type="button"
+              [disabled]="isLoadingMore()"
+              (click)="loadMore()"
+            >
+              {{ isLoadingMore() ? 'Завантажуємо…' : loadMoreError() ? 'Спробувати ще' : 'Завантажити ще' }}
+            </button>
+          </div>
+        }
       }
     </section>
   </main>
 
   <footer class="border-t border-white/8 bg-black/10">
-    <div class="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-4 px-5 py-6 text-center sm:flex-row sm:px-8 sm:text-left">
-      <a class="flex items-center gap-2.5 text-sm font-bold text-white no-underline" href="/" aria-label="GIF Finder — на головну">
+    <div
+      class="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-4 px-5 py-6 text-center sm:flex-row sm:px-8 sm:text-left">
+      <a class="flex items-center gap-2.5 text-sm font-bold text-white no-underline" href="/"
+         aria-label="GIF Finder — на головну">
         <span class="brand-mark footer-brand-mark" aria-hidden="true">g</span>
         <span>gif<span class="text-fuchsia-400">finder</span></span>
       </a>

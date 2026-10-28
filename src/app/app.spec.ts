@@ -25,6 +25,16 @@ const responseWith = (data: Gif[]): GiphyResponse => ({
   pagination: { total_count: data.length, count: data.length, offset: 0 },
 });
 
+const responsePage = (
+  data: Gif[],
+  totalCount: number,
+  offset: number,
+  count = data.length,
+): GiphyResponse => ({
+  data,
+  pagination: { total_count: totalCount, count, offset },
+});
+
 describe('App', () => {
   let searchGifs: ReturnType<typeof vi.fn>;
 
@@ -60,7 +70,7 @@ describe('App', () => {
     searchBar.searchRequested.emit('  cats  ');
     fixture.detectChanges();
 
-    expect(searchGifs).toHaveBeenCalledWith('cats');
+    expect(searchGifs).toHaveBeenCalledWith('cats', 20, 0);
     expect(fixture.nativeElement.querySelector('app-gif-card')).toBeTruthy();
   });
 
@@ -127,5 +137,76 @@ describe('App', () => {
 
     expect(fixture.nativeElement.textContent).toContain('Latest result');
     expect(fixture.nativeElement.textContent).not.toContain('A cat GIF');
+  });
+
+  it('loads the next page and appends it to the existing results', () => {
+    const firstPage = Array.from({ length: 20 }, (_, index) => ({
+      ...testGif,
+      id: `gif-${index}`,
+      title: `GIF ${index}`,
+    }));
+    searchGifs.mockImplementation((_query: string, _limit: number, offset: number) =>
+      of(
+        offset === 0
+          ? responsePage(firstPage, 21, 0, 20)
+          : responsePage([{ ...testGif, id: 'gif-20', title: 'GIF 20' }], 21, 20, 1),
+      ),
+    );
+
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const searchBar = fixture.debugElement.query(By.directive(SearchBar))
+      .componentInstance as SearchBar;
+
+    searchBar.searchRequested.emit('cats');
+    fixture.detectChanges();
+    const buttons = fixture.nativeElement.querySelectorAll(
+      'button',
+    ) as NodeListOf<HTMLButtonElement>;
+    const loadMoreButton = Array.from(buttons).find((button) =>
+      button.textContent.includes('Завантажити ще'),
+    ) as HTMLButtonElement;
+    loadMoreButton.click();
+    fixture.detectChanges();
+
+    expect(searchGifs).toHaveBeenNthCalledWith(1, 'cats', 20, 0);
+    expect(searchGifs).toHaveBeenNthCalledWith(2, 'cats', 20, 20);
+    expect(fixture.nativeElement.querySelectorAll('app-gif-card').length).toBe(21);
+    expect(fixture.nativeElement.querySelector('button').textContent).not.toContain(
+      'Завантажити ще',
+    );
+  });
+
+  it('keeps current results and offers a retry if loading more fails', () => {
+    const firstPage = Array.from({ length: 20 }, (_, index) => ({
+      ...testGif,
+      id: `gif-${index}`,
+      title: `GIF ${index}`,
+    }));
+    searchGifs
+      .mockReturnValueOnce(of(responsePage(firstPage, 21, 0, 20)))
+      .mockReturnValueOnce(throwError(() => new Error('Network error')));
+
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const searchBar = fixture.debugElement.query(By.directive(SearchBar))
+      .componentInstance as SearchBar;
+
+    searchBar.searchRequested.emit('cats');
+    fixture.detectChanges();
+    const buttons = fixture.nativeElement.querySelectorAll(
+      'button',
+    ) as NodeListOf<HTMLButtonElement>;
+    const loadMoreButton = Array.from(buttons).find((button) =>
+      button.textContent.includes('Завантажити ще'),
+    ) as HTMLButtonElement;
+    loadMoreButton.click();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelectorAll('app-gif-card').length).toBe(20);
+    expect(fixture.nativeElement.querySelector('[role="alert"]')?.textContent).toContain(
+      'Не вдалося завантажити наступні GIF',
+    );
+    expect(fixture.nativeElement.textContent).toContain('Спробувати ще');
   });
 });

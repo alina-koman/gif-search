@@ -31,4 +31,14 @@ describe('SearchBar', () => {
     await new Promise((resolve) => setTimeout(resolve, 450));
     expect(emitted).toEqual(['cats']);
   });
+
+  it('shows only its own clear button while a query is entered', () => {
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    input.value = 'cats';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    expect(input.type).toBe('text');
+    expect(fixture.nativeElement.querySelectorAll('.clear-button').length).toBe(1);
+  });
 });
