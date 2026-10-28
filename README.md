@@ -7,10 +7,20 @@ This project was generated using [Angular CLI](https://github.com/angular/angula
 To start a local development server, run:
 
 ```bash
-ng serve
+npm start
 ```
 
 Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+
+## Giphy API configuration
+
+Create a local environment file from the example and add your API key:
+
+```bash
+cp src/environments/environment.example.ts src/environments/environment.ts
+```
+
+Set `giphyApiKey` in `src/environments/environment.ts`. That local file is ignored by Git; do not put a real key in the example file. Angular CLI does not load `.env` files automatically, and any key used by a browser app is visible to users in the built JavaScript. Treat the key as public and use Giphy's key restrictions where available; use a server-side proxy if the key must remain secret.
 
 ## Code scaffolding
 
