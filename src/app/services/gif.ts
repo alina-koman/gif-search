@@ -8,6 +8,41 @@ import { GiphyResponse } from '../models/gif.model';
 export class GifService {
   private readonly http = inject(HttpClient);
 
+  async copyGifLink(url: string): Promise<void> {
+    if (typeof navigator === 'undefined' || !navigator.clipboard?.writeText) {
+      throw new Error('Clipboard access is unavailable in this browser or page context.');
+    }
+
+    await navigator.clipboard.writeText(url);
+  }
+
+  async downloadGif(url: string, filename: string): Promise<void> {
+    const downloadUrl = new URL(url);
+    if (downloadUrl.protocol !== 'https:') {
+      throw new Error('GIF downloads are only supported from secure HTTPS URLs.');
+    }
+
+    const response = await fetch(downloadUrl);
+    if (!response.ok) {
+      throw new Error(`GIF download failed with status ${response.status}.`);
+    }
+
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    try {
+      link.href = objectUrl;
+      link.download = filename;
+      link.hidden = true;
+      document.body.append(link);
+      link.click();
+    } finally {
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+    }
+  }
+
   searchGifs(query: string, limit = 20, offset = 0): Observable<GiphyResponse> {
     const normalizedQuery = query.trim();
 
@@ -19,9 +54,7 @@ export class GifService {
     }
 
     if (!environment.giphyApiKey) {
-      return throwError(
-        () => new Error('Giphy API key is missing.'),
-      );
+      return throwError(() => new Error('Giphy API key is missing.'));
     }
 
     if (!Number.isInteger(limit) || limit < 1 || limit > 50) {

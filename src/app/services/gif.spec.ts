@@ -18,6 +18,7 @@ describe('GifService', () => {
 
   afterEach(() => {
     httpTestingController.verify();
+    vi.unstubAllGlobals();
   });
 
   it('searches Giphy with a trimmed query and pagination options', () => {
@@ -63,5 +64,38 @@ describe('GifService', () => {
 
   it('is provided by Angular', () => {
     expect(service).toBeTruthy();
+  });
+
+  it('copies a GIF link using the Clipboard API', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal('navigator', { clipboard: { writeText } });
+
+    await service.copyGifLink('https://giphy.com/gifs/test');
+
+    expect(writeText).toHaveBeenCalledWith('https://giphy.com/gifs/test');
+  });
+
+  it('rejects when clipboard access is unavailable', async () => {
+    vi.stubGlobal('navigator', {});
+
+    await expect(service.copyGifLink('https://giphy.com/gifs/test')).rejects.toThrow(
+      'Clipboard access is unavailable',
+    );
+  });
+
+  it('rejects insecure download URLs', async () => {
+    await expect(
+      service.downloadGif('http://media.giphy.com/test.gif', 'test.gif'),
+    ).rejects.toThrow('HTTPS');
+  });
+
+  it('reports HTTP failures when downloading GIFs', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: false, status: 403 } satisfies Partial<Response>),
+    );
+    await expect(
+      service.downloadGif('https://media.giphy.com/test.gif', 'test.gif'),
+    ).rejects.toThrow('403');
   });
 });
