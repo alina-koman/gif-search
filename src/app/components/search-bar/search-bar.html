@@ -1,0 +1,34 @@
+<div class="search-shell flex items-center gap-3 rounded-2xl p-2 pl-4">
+  <svg class="h-5 w-5 shrink-0 text-zinc-500" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8" />
+    <path d="m16 16 4 4" stroke="currentColor" stroke-linecap="round" stroke-width="1.8" />
+  </svg>
+  <label class="sr-only" for="gif-search">Пошук GIF</label>
+  <input
+    id="gif-search"
+    class="min-w-0 flex-1 bg-transparent py-2 text-sm text-white outline-none placeholder:text-zinc-500 sm:text-base"
+    type="search"
+    autocomplete="off"
+    placeholder="Шукати GIF..."
+    [value]="query()"
+    (input)="onInput($event)"
+    (keydown.enter)="searchNow()"
+  />
+  @if (query()) {
+    <button
+      class="clear-button grid h-9 w-9 shrink-0 place-items-center rounded-xl text-zinc-400 transition hover:bg-white/10 hover:text-white"
+      type="button"
+      aria-label="Очистити пошук"
+      (click)="clear()"
+    >
+      <span aria-hidden="true">×</span>
+    </button>
+  }
+  <button
+    class="search-button shrink-0 rounded-xl px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fuchsia-300 sm:px-6"
+    type="button"
+    (click)="searchNow()"
+  >
+    Шукати
+  </button>
+</div>

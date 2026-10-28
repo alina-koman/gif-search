@@ -1,5 +1,7 @@
 export interface GifRendition {
   url: string;
+  width: string;
+  height: string;
 }
 
 export interface GifUser {

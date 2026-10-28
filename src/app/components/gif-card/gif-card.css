@@ -1,0 +1,14 @@
+.gif-card {
+  isolation: isolate;
+}
+
+.gif-card-overlay {
+  z-index: 1;
+  background: linear-gradient(transparent 25%, rgb(0 0 0 / 78%));
+}
+
+@media (hover: none) {
+  .gif-card-overlay {
+    opacity: 1;
+  }
+}

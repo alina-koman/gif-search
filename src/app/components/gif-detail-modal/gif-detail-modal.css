@@ -1,0 +1,42 @@
+.gif-dialog {
+  position: fixed;
+  inset: 0;
+  width: min(56rem, calc(100vw - 2rem));
+  height: min(38rem, calc(100dvh - 2rem));
+  max-width: unset;
+  max-height: unset;
+  margin: auto;
+}
+
+.gif-dialog[open] {
+  animation: dialog-enter 180ms ease-out;
+}
+
+.gif-dialog::backdrop {
+  background: rgb(5 4 8 / 78%);
+  backdrop-filter: blur(8px);
+}
+
+@keyframes dialog-enter {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 767px) {
+  .detail-preview {
+    min-height: 12rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gif-dialog[open] {
+    animation: none;
+  }
+}

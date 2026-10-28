@@ -1,0 +1,5 @@
+<div class="gif-grid">
+  @for (gif of gifs(); track gif.id) {
+    <app-gif-card [gif]="gif" (selected)="gifSelected.emit($event)" />
+  }
+</div>

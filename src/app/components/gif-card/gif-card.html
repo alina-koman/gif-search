@@ -1,0 +1,20 @@
+<button
+  class="gif-card group relative block w-full overflow-hidden rounded-2xl bg-zinc-900 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-fuchsia-400"
+  type="button"
+  [attr.aria-label]="'Переглянути GIF: ' + gif().title"
+  (click)="select($event)"
+>
+  <img
+    class="aspect-[4/3] w-full object-cover transition duration-300 group-hover:scale-105"
+    [ngSrc]="gif().images.fixed_height.url"
+    [width]="gif().images.fixed_height.width"
+    [height]="gif().images.fixed_height.height"
+    [alt]="gif().title"
+    loading="lazy"
+    decoding="async"
+  />
+  <span
+    class="gif-card-overlay absolute inset-0 flex items-end p-4 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+    <span class="line-clamp-2 text-sm font-semibold text-white">{{ gif().title }}</span>
+  </span>
+</button>

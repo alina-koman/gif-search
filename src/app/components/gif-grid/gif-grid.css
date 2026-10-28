@@ -1,0 +1,27 @@
+:host {
+  display: block;
+}
+
+.gif-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.gif-grid > app-gif-card {
+  display: block;
+  flex: 0 0 calc((100% - 1rem) / 2);
+  min-width: 0;
+}
+
+@media (min-width: 640px) {
+  .gif-grid > app-gif-card {
+    flex-basis: calc((100% - 2rem) / 3);
+  }
+}
+
+@media (min-width: 1024px) {
+  .gif-grid > app-gif-card {
+    flex-basis: calc((100% - 3rem) / 4);
+  }
+}
