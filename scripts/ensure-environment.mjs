@@ -1,4 +1,4 @@
-import { access, copyFile, readFile, writeFile } from 'node:fs/promises';
+import { access, readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -10,7 +10,14 @@ try {
   await access(environmentPath);
 } catch {
   const example = await readFile(examplePath, 'utf8');
-  const apiKey = JSON.stringify(process.env['GIPHY_API_KEY'] ?? '');
+  const configuredApiKey = process.env['GIPHY_API_KEY'];
+  if (!configuredApiKey?.trim()) {
+    throw new Error(
+      'GIPHY_API_KEY is missing. Configure it in your deployment environment before building.',
+    );
+  }
+
+  const apiKey = JSON.stringify(configuredApiKey);
   const environment = example.replace(
     /giphyApiKey:\s*'YOUR_GIPHY_API_KEY_HERE'/,
     `giphyApiKey: ${apiKey}`,
